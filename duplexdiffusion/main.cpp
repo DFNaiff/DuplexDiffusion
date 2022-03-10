@@ -5,6 +5,7 @@
 #include "solver.h"
 #include "timer.h"
 
+//Main solver
 int main()
 {
     duplexsolver::Parameters parameters;
@@ -13,13 +14,12 @@ int main()
     parameters.R = 5;
     parameters.vol_fraction = 0.4; //0.4
     parameters.L = 100;
-    solparams.maxwindow = 1000*5;//1000
-    duplexsolver::Solver solver(parameters, solparams);
-    solver.prepare_linear_system();
+    solparams.maxwindow = 5000;//1000
+    solparams.timestep /= 5;
     int nsteps = 100000;
     nsteps *= 5;
-    solparams.timestep /= 5;
-//
+    duplexsolver::Solver solver(parameters, solparams);
+    solver.prepare_linear_system();
     timer::Timer t;
     std::ofstream file;
     std::ofstream filestep;

@@ -22,7 +22,7 @@ struct Parameters{
     double L = 100; // #um
     double cinit = 1.0; // #mol/um^3
     double Gamma(){
-        return vol_fraction/(4.0/3*M_PI*R*R); //1/um^3
+        return vol_fraction/(4.0/3*M_PI*R*R*R); //1/um^3
     }
     double beta(){
         return 8*M_PI*R*Gamma()*alpha*K;
@@ -34,7 +34,7 @@ struct SolParams{
     int nkernel = 10;
     double timestep = 0.25;
     double decay_limit = 0.1;
-    int maxwindow = 100;
+    int maxwindow = 1000;
 };
 
 class Solver{

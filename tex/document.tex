@@ -258,7 +258,44 @@ which we can then solve at each time step. Some notes here
 	\item If we use a constant time step, we can define $\hat{\omega}^j := \omega^{n+1, n-j} = \omega(h(j + 1/2))$. We just calculate beforehand for some values of $j$ and hold the values (remembering the cutoff note above).
 \end{itemize}
 
+\section{Results}
+There are the results of a simulation of this model, with unit concentration at the inlet and zero concentration at the outlet.
+\begin{itemize}
+	\item Physical parameters (some taken from Olden)
+	\begin{itemize}
+		\item $D$ - 6.0*1e-1 $\mu m^2/s$
+		\item $\alpha$ - 1.4*1e-4 $\mu m^2/s$
+		\item $K$ - 32.51/0.033
+		\item $R$ = 1 $\mu m$
+		\item $\Gamma$ - 0.023873241463784306 $\mu m^{-3}$ (from 0.1 of volumetric fraction)
+		\item $L$ - 100 $\mu m$
+	\end{itemize}
+	\item Solver parameters
+	\begin{itemize}
+		\item Space discretization points = 21
+		\item Size of kernel expansion = 10
+		\item Time step = 0.25
+		\item Decay limit = 0.1
+		\item Memory's maximum size = 1000
+	\end{itemize}
+\end{itemize}
 
+\begin{figure}
+	\centering
+	\includegraphics[width=\linewidth]{figs/flux}
+	\caption{}
+	\label{fig:flux}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\linewidth]{figs/profile999}
+	\caption{}
+	\label{fig:profile999}
+\end{figure}
+
+
+\appendix
 \section{Transform approaches}
 \subsection{Fourier transforming bulk equation}
 We can do other things. Let's try to Fourier transform this (in $t$). Let $C(x,s) = \mathcal{F}_t(c(x,t))(s)$. Hence, we have that

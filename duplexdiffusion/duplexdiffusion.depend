@@ -1,0 +1,14 @@
+# depslib dependency file v1.0
+1646937384 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
+	<iostream>
+	<cmath>
+	<vector>
+	<exception>
+	<tuple>
+	<fstream>
+	<chrono>
+	<eigen3/Eigen/Dense>
+	<eigen3/Eigen/Sparse>
+	<eigen3/Eigen/SparseLU>
+	<eigen3/Eigen/SparseQR>
+

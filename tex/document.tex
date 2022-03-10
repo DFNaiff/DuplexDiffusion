@@ -85,13 +85,49 @@
 
 \end{abstract}
 
+\section{Model}
+The main model consists of hydrogen diffusion two-phase system, in which there is a bulk phase, with spherical precipitates in it, disperse enough so that we can do homogenization. Moreover, consider that the precipitates have a radius of $R$, that the bulk diffusivity is $D$, the precipitate diffusivity is $\alpha$, and there is $\Gamma$ precipitates per unit volume (we can get this statistics from the volume fraction, assuming spherical particles).
+
+We denote by $c(x, t)$ the hydrogen concentration at the bulk phase, while we denote by $n(r, t; x)$ the concentration of hydrogen in the precipitate at $x$, on radius $r$ (of the precipitate) and time $t$.
+ 
+The interface between two phases satisfies both the continuity of chemical potential, which translates to
+\begin{equation}
+	\frac{c}{n} = \frac{S_c}{S_n} = \exp \left( \frac{\mu_c - \mu_n}{RT} \right) =: K,
+\end{equation}
+and the continuities of fluxes
+\begin{equation}
+	J_c = J_n = J.
+\end{equation}
+
+Now, consider an interface at $(x, t)$. From the point of view of the bulk, we can think of this interface as being a sink for the bulk concentration, at the boundary. Then, \textit{each precipitate} results in a volumetric sink of strength $4 \pi R^2 J$. Of course, then we have that the sink per unit volume becomes $4 \pi R^2 \Gamma J$. Therefore, we can consider the bulk transport as following a diffusion equation with sink
+\begin{equation}
+	\pderiv{c}{t}(x,t) = D \frac{\partial^2 c}{\partial x^2}(x,t) - 4 \pi R^2 \Gamma J.
+\end{equation}
+
+Now, from the point of view of the precipitate at $x$, we have that the continuity of chemical potentials makes that, at the interface \textit{from the precipitate size}, we can consider a time-varying inlet concentration dependant on $c(x,t)$. That is, at $r = R$ (and $r = -R$), we must have
+\begin{equation}
+	n(R, t; x) = c(x, t).
+\end{equation}
+As for the precipitate itself, it follows that it must obey the spherically symmetric form of the diffusion equation 
+\begin{equation}
+	\pderiv{n}{t}(r,t,x) = \alpha \frac{1}{r^2} \pderiv{}{r} \left( r^2 \pderiv{n}{r}(r,t,x)\right)
+\end{equation}
+
+And, of course, Fick's first law says that we can calculate the flux $J$ from the precipitate side, given by
+\begin{equation}
+	J = -\alpha \pderiv{n}{r}(R,t).
+\end{equation}.
+Therefore, we end up with the model as in the next section.
+
 \section{Derivation of bulk equation}
+Consider then
+
 \begin{equation}\label{originalproblem}
 	\begin{split}
 	& \pderiv{c}{t}(x,t) = D \frac{\partial^2 c}{\partial x^2}(x,t) - 4 \pi R^2 \Gamma J; t \geq 0, 0 \leq x \leq L\\
 	& \pderiv{n}{t}(r,t,x) = \alpha \frac{1}{r^2} \pderiv{}{r} \left( r^2 \pderiv{n}{r}(r,t,x)\right); \quad t \geq 0, -R \leq x \leq R \\
 	& J = -\alpha \pderiv{n}{r}(R,t) \\
-	& n(R,0,x) = n(-R,0,x) = K c(x,t) \\
+	& n(R,t,x) = n(-R,t,x) = K c(x,t) \\
 	\end{split}
 \end{equation}
 

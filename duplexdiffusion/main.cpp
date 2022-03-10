@@ -14,17 +14,18 @@ int main()
     parameters.R = 5;
     parameters.vol_fraction = 0.4; //0.4
     parameters.L = 100;
-    solparams.maxwindow = 5000;//1000
-    solparams.timestep /= 5;
+    solparams.maxwindow = 1000;//1000
+    solparams.timestep /= 1;
+    solparams.nspace = 61;
     int nsteps = 100000;
-    nsteps *= 5;
+    nsteps *= 1;
     duplexsolver::Solver solver(parameters, solparams);
     solver.prepare_linear_system();
     timer::Timer t;
     std::ofstream file;
     std::ofstream filestep;
     t.reset();
-    file.open("../data/result_realistic_detailed");
+    file.open("../data/result_realistic_xdetailed");
     for(int i = 0; i < nsteps; i++){
         //solver.step();
         file << solver.step().transpose() << std::endl;

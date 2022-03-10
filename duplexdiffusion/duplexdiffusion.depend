@@ -1,9 +1,10 @@
 # depslib dependency file v1.0
-1646941077 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
+1646941419 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
 	<iostream>
 	<fstream>
 	<chrono>
 	"solver.h"
+	"timer.h"
 
 1646941052 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/solver.cpp
 	<cmath>
@@ -23,4 +24,7 @@
 	<tuple>
 	<eigen3/Eigen/Dense>
 	<eigen3/Eigen/Sparse>
+
+1646941453 /home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/timer.h
+	<chrono>
 

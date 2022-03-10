@@ -20,8 +20,8 @@ int main()
     std::ofstream file;
     std::ofstream filestep;
     t.reset();
-    file.open("../notebooks/result_little");
-    filestep.open("../notebooks/result_little_t");
+    file.open("../data/result_little");
+    filestep.open("../data/result_little_t");
     for(int i = 0; i < nsteps; i++){
         //solver.step();
         file << solver.step().transpose() << std::endl;

@@ -2,6 +2,7 @@
 #include <vector>
 #include <exception>
 #include <tuple>
+#include <queue>
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Sparse>
@@ -202,7 +203,9 @@ Eigen::VectorXd& Solver::step(){
     prepare_linear_system(); //Prepare the LHS of the system
     Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
     m_memory.push_back(cnew); //Add to memory
+    if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_back();};
     m_timesteps.push_back(m_timesteps.back() + m_solparams.timestep);
+    if(m_timesteps.size() > m_solparams.maxwindow){m_memory.pop_back();};
     return m_memory[m_memory.size()-1];
 }
 
@@ -210,7 +213,9 @@ Eigen::VectorXd& Solver::step(double dt){
     prepare_linear_system(dt); //Prepare the LHS of the system
     Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
     m_memory.push_back(cnew); //Add to memory
+    if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_back();};
     m_timesteps.push_back(m_timesteps.back() + dt);
+    if(m_timesteps.size() > m_solparams.maxwindow){m_memory.pop_back();};
     return m_memory[m_memory.size()-1];
 }
 

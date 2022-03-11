@@ -5,6 +5,7 @@
 #include <vector>
 #include <exception>
 #include <tuple>
+#include <deque>
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <eigen3/Eigen/Dense>
@@ -101,11 +102,11 @@ class Solver{
         std::vector<double> m_omegavals;
         Eigen::MatrixXd m_precision;
         Eigen::VectorXd m_rhs;
-        std::vector<Eigen::VectorXd> m_memory;
+        std::deque<Eigen::VectorXd> m_memory;
         Eigen::PartialPivLU<Eigen::MatrixXd> m_decomposition;
         Eigen::SparseMatrix<double> m_sparse_precision;
         Eigen::SparseLU<Eigen::SparseMatrix<double>> m_sparse_decomposition;
-        std::vector<double> m_timesteps;
+        std::deque<double> m_timesteps;
         double omegakernel(double t){
             double res;
             for(int k = 1; k <= m_solparams.nkernel; k++){

@@ -51,11 +51,8 @@ int main()
     //Just leave the defaults for now
     duplexsolver::Parameters parameters;
     duplexsolver::SolParams solparams;
-    parameters.cylinder = true;
-    parameters.vol_fraction = 0.0;
-    solparams.maxwindow = 2;
-    //
-    std::string savename = "../data/result_large_convolution_clean";
+
+    std::string savename = "../data/result_test";
     double tfinal = 25000.0;
 
     //control::Controller controller(0.025, 25.00);

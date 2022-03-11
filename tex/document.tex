@@ -254,6 +254,16 @@ or, expanding the convolution,
 	\pderiv{}{t} c(x, t) + \beta \int_0^t \omega(t - s) \pderiv{}{s} c(x, s) ds = D \frac{\partial^2 c}{\partial x^2}(x,t)
 \end{equation}
 
+\subsection{Cylindric precipitates, \textit{mutatis mutandis}}
+If we consider the approximation by cylindric precipitates, then, defining $\Gamma_c$ as the amount precipitates per cross-sectional area, we can follow the same arguments above (now using Bessel functions of the first kind), and arrive at almost the same equations, now with
+\begin{equation}
+	\begin{split}
+		& \beta = 4 \pi \Gamma \alpha K \\
+		& \omega = \sum_{k=1}^\infty \omega_k = \sum_{k=1}^\infty \exp \left( -\frac{\alpha u_{0, k}^2 t}{R^2} \right)
+	\end{split},
+\end{equation}
+with $u_{0, k}$ being the k-th zero of the zeroth Bessel function of the first kind.
+
 \section{Discretization}
 Let's discretize this. Forgetting about $x$ for now, consider only the operator
 \begin{equation}

@@ -6,6 +6,7 @@
 #include <exception>
 #include <tuple>
 
+#include <boost/math/special_functions/bessel.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Sparse>
 
@@ -15,18 +16,22 @@ namespace duplexsolver
 
 /**The physical parameters of the system */
 struct Parameters{
+    bool cylinder = false;
     double D = 6.0*1e-11*1e12; // um^2/s
     double alpha = 1.4*1e-16*1e12; // um^2/s
     double R = 1.0; // um
     double K = 32.51/0.033; //unitless
     double vol_fraction = 0.1; //unitless
+    double area_fraction = 0.1; //unitless
     double L = 100; // #um
     double cinit = 1.0; // #mol/um^3
     double Gamma(){
-        return vol_fraction/(4.0/3*M_PI*R*R*R); //1/um^3
+        if(!cylinder){return vol_fraction/(4.0/3*M_PI*R*R*R);} //1/um^3
+        else{return area_fraction/(4.0*M_PI*R*R);} //1/um^2
     }
     double beta(){
-        return 8*M_PI*R*Gamma()*alpha*K;
+        if(!cylinder){return 8*M_PI*R*Gamma()*alpha*K;}
+        else{return 4*M_PI*Gamma()*alpha*K;}
     }
 };
 
@@ -93,7 +98,12 @@ class Solver{
         double omegakernel(double t){
             double res;
             for(int k = 1; k <= m_solparams.nkernel; k++){
-                double coef = m_parameters.alpha*std::pow(M_PI*k/m_parameters.R, 2);
+                double coef{};
+                if(!m_parameters.cylinder){
+                    coef = m_parameters.alpha*std::pow(M_PI*k/m_parameters.R, 2);
+                } else {
+                    coef = m_parameters.alpha*boost::math::cyl_bessel_j_zero(0.0, k);
+                }
                 res += std::exp(-coef*t);
             }
             return res;

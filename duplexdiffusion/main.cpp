@@ -17,7 +17,7 @@ void fixed_timestep_solve(duplexsolver::Parameters& parameters,
     file.open(savename);
     while(solver.last_timestep() < tmax){
         //solver.step();
-        auto current_val = solver.step();
+        auto current_val = solver.step(solparams.timestep);
         file << solver.last_timestep() << " " << current_val.transpose() << std::endl;
     }
     file.close();
@@ -28,7 +28,10 @@ int main()
     //Just leave the defaults for now
     duplexsolver::Parameters parameters;
     duplexsolver::SolParams solparams;
-    std::string savename = "../data/result_test";
+    parameters.cylinder = true;
+    parameters.area_fraction = 0.0;
+    solparams.maxwindow = 2;
+    std::string savename = "../data/result_clean_test";
     double tfinal = 25000.0;
     fixed_timestep_solve(parameters, solparams, tfinal, savename);
 }

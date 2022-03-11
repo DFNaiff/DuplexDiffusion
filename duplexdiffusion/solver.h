@@ -18,8 +18,8 @@ namespace duplexsolver
 /**The physical parameters of the system */
 struct Parameters{
     bool cylinder = false;
-    double D = 6.0*1e-11*1e12; // um^2/s
-    double alpha = 1.4*1e-16*1e12; // um^2/s
+    double D = 60.0; // um^2/s
+    double alpha = 1.4*1e-4; // um^2/s
     double R = 5.0; // um
     double K = 32.51/0.033; //unitless
     double vol_fraction = 0.4; //unitless
@@ -102,11 +102,11 @@ class Solver{
         std::vector<double> m_omegavals;
         Eigen::MatrixXd m_precision;
         Eigen::VectorXd m_rhs;
-        std::deque<Eigen::VectorXd> m_memory;
+        std::queue<Eigen::VectorXd> m_memory;
         Eigen::PartialPivLU<Eigen::MatrixXd> m_decomposition;
         Eigen::SparseMatrix<double> m_sparse_precision;
         Eigen::SparseLU<Eigen::SparseMatrix<double>> m_sparse_decomposition;
-        std::deque<double> m_timesteps;
+        std::queue<double> m_timesteps;
         double omegakernel(double t){
             double res;
             for(int k = 1; k <= m_solparams.nkernel; k++){
@@ -114,7 +114,7 @@ class Solver{
                 if(!m_parameters.cylinder){
                     coef = m_parameters.alpha*std::pow(M_PI*k/m_parameters.R, 2);
                 } else {
-                    coef = m_parameters.alpha*boost::math::cyl_bessel_j_zero(0.0, k);
+                    coef = m_parameters.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_parameters.R, 2);
                 }
                 res += std::exp(-coef*t);
             }

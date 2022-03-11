@@ -149,15 +149,16 @@ Eigen::VectorXd& Solver::make_equation_lhs(double dt){
         throw std::length_error("Empty list");
     }
     double beta = m_parameters.beta();
-    double cn_constant = 1.0/m_solparams.timestep + beta*m_omegavals[0]; //This is the term c_{n}
+    double omega_base = omegakernel(dt/2); //(t_{i} + dt - (t_{i} + d_t + t_i)/2) = dt/2
+    double cn_constant = 1.0/m_solparams.timestep + beta*omega_base; //This is the term c_{n}
     Eigen::VectorXd res = cn_constant*m_memory[m_memory.size() - 1]; //This is the term containing only c_{n}
     for(int i = m_memory.size() - 2; i>= 0; i--){ //n-1, n, ..., 0
         //Calculates the corresponding omega value
-        double omega = omegakernel(m_timesteps.back() - m_timesteps[i]);
-        if(omega/m_omegavals[0] < m_solparams.decay_limit){
+        double omegat = m_timesteps.back() + dt - (m_timesteps[i] + m_timesteps[i+1])/2;
+        double omega = omegakernel(omegat);
+        if(omega/omega_base < m_solparams.decay_limit){
             break;
         }
-//        int omega_i = m_memory.size() - 1 - i; //1, 2, ...
         res -= beta*(m_memory[i+1] - m_memory[i])*omega; //The summation terms
     }
     m_rhs.col(0) = res.col(0); //Copy
@@ -203,9 +204,9 @@ Eigen::VectorXd& Solver::step(){
     prepare_linear_system(); //Prepare the LHS of the system
     Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
     m_memory.push_back(cnew); //Add to memory
-    if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_back();};
+    //if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_front();};
     m_timesteps.push_back(m_timesteps.back() + m_solparams.timestep);
-    if(m_timesteps.size() > m_solparams.maxwindow){m_memory.pop_back();};
+    //if(m_timesteps.size() > m_solparams.maxwindow){m_memory.pop_front();};
     return m_memory[m_memory.size()-1];
 }
 
@@ -213,9 +214,9 @@ Eigen::VectorXd& Solver::step(double dt){
     prepare_linear_system(dt); //Prepare the LHS of the system
     Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
     m_memory.push_back(cnew); //Add to memory
-    if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_back();};
+    if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_front();};
     m_timesteps.push_back(m_timesteps.back() + dt);
-    if(m_timesteps.size() > m_solparams.maxwindow){m_memory.pop_back();};
+    if(m_timesteps.size() > m_solparams.maxwindow){m_memory.pop_front();};
     return m_memory[m_memory.size()-1];
 }
 

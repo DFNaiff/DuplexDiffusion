@@ -6,6 +6,7 @@
 #include <exception>
 #include <tuple>
 #include <deque>
+#include <iostream>
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <eigen3/Eigen/Dense>
@@ -39,9 +40,10 @@ struct Parameters{
 /**The solver parameters */
 struct SolParams{
     int nspace = 21;
-    int nkernel = 10;
+    double kernel_limit = 0.01;
+    int maxkernel = 1000;
     double timestep = 0.25;
-    double decay_limit = 0.1;
+    double decay_limit = 0.01;
     int maxwindow = 1000;
 };
 
@@ -59,27 +61,41 @@ class Solver{
         /**Getter for the memory of cvalues */
         const auto& get_memory() {return m_memory;}
         /**Getter for the precision matrix */
-        const auto& get_precision() {return m_precision;}
-        /**Getter for the rhs of the system */
-        const auto& get_rhs() {return m_rhs;}
-        /**Getter for timesteps */
         const auto& get_timesteps() {return m_timesteps;}
         /**Get last time step */
         double last_timestep() {return m_timesteps.back();}
+        /**Makes a fixed time step*/
+        Eigen::VectorXd& step();
+        /**Makes a variable time step*/
+        Eigen::VectorXd& step(double dt);
+        /**Cancels the last step*/
+        void cancel_last_step();
+        /**Get last step error*/
+        double get_last_step_error();
+    private:
+        Parameters m_parameters;
+        SolParams m_solparams;
+        std::vector<double> m_omegavals;
+        Eigen::VectorXd m_rhs;
+        std::deque<Eigen::VectorXd> m_memory;
+        Eigen::SparseMatrix<double> m_sparse_precision;
+        Eigen::SparseLU<Eigen::SparseMatrix<double>> m_sparse_decomposition;
+        bool m_sparse_initialized;
+        std::deque<double> m_timesteps;
         /**Get the precomputed kernel values. @returns these values */
         std::vector<double>& omegavalues();
         /**Make the finite difference matrix. @returns this matrix */
-        Eigen::MatrixXd& make_finite_difference_matrix();
+        Eigen::SparseMatrix<double>& make_finite_difference_matrix(Eigen::SparseMatrix<double>& matrix, bool initialized=false);
         /**Adds the time terms to the diagonal of the finite difference matrix. @returns this matrix */
-        Eigen::MatrixXd& add_step_to_diag(Eigen::MatrixXd& matrix);
+        Eigen::SparseMatrix<double>& add_step_to_diag(Eigen::SparseMatrix<double>& matrix);
+        /**Adds the time terms to the diagonal of the finite difference matrix. @returns this matrix */
+        Eigen::SparseMatrix<double>& add_step_to_diag(Eigen::SparseMatrix<double>& matrix, double dt);
         /**Add the Dirichlet conditions to this matrix. @returns this matrix */
-        Eigen::MatrixXd& add_matrix_bc(Eigen::MatrixXd& matrix);
+        Eigen::SparseMatrix<double>& add_matrix_bc(Eigen::SparseMatrix<double>& matrix);
         /**Makes the precision matrix. @returns that matrix */
-        Eigen::MatrixXd& make_precision_matrix();
-        /**Makes the sparse matrix from the precision matrix. @returns that sparse matrix */
-        Eigen::SparseMatrix<double>& make_sparse_precision_from_dense();
-        /**Makes the sparse matrix from dense matrix. @returns that sparse matrix */
-        Eigen::SparseMatrix<double>& make_sparse_precision_from_dense(Eigen::MatrixXd& dense);
+        Eigen::SparseMatrix<double>& make_precision_matrix();
+        /**Makes the precision matrix. @returns that matrix */
+        Eigen::SparseMatrix<double>& make_precision_matrix(double dt);
         /**Makes the LHS of the system */
         Eigen::VectorXd& make_equation_lhs();
         /**Makes the LHS of the system */
@@ -89,37 +105,33 @@ class Solver{
         /**Makes the initial 0 condition (and 1 at boundary) */
         Eigen::VectorXd& make_initial_condition();
         /**Prepares the linear system. @returns the tuple with the precision matrix and the LHS */
-        std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> prepare_linear_system(double dt);
+        void prepare_linear_system(double dt);
         /**Makes a time step. Returns the result in this step*/
-        std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> prepare_linear_system();
+        void prepare_linear_system();
         /**Makes a time step. Returns the result in this step*/
-        Eigen::VectorXd& step();
-        /**Makes a variable time step*/
-        Eigen::VectorXd& step(double dt);
-    private:
-        Parameters m_parameters;
-        SolParams m_solparams;
-        std::vector<double> m_omegavals;
-        Eigen::MatrixXd m_precision;
-        Eigen::VectorXd m_rhs;
-        std::queue<Eigen::VectorXd> m_memory;
-        Eigen::PartialPivLU<Eigen::MatrixXd> m_decomposition;
-        Eigen::SparseMatrix<double> m_sparse_precision;
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> m_sparse_decomposition;
-        std::queue<double> m_timesteps;
         double omegakernel(double t){
-            double res;
-            for(int k = 1; k <= m_solparams.nkernel; k++){
+            double res = 0;
+            double base = 1.0;
+            for(int k = 1; k <= m_solparams.maxkernel; k++){
                 double coef{};
                 if(!m_parameters.cylinder){
                     coef = m_parameters.alpha*std::pow(M_PI*k/m_parameters.R, 2);
                 } else {
                     coef = m_parameters.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_parameters.R, 2);
                 }
-                res += std::exp(-coef*t);
+                double increment = std::exp(-coef*t);
+                if(k == 1){
+                    base = increment;
+                } else {
+                    if(increment/base < m_solparams.decay_limit){
+                        break;
+                    }
+                }
+                res += increment;
             }
             return res;
         }
+
 };
 
 }

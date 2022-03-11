@@ -1,12 +1,13 @@
 # depslib dependency file v1.0
-1646963343 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
+1647005480 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
 	<iostream>
 	<fstream>
 	<chrono>
+	<string>
 	"solver.h"
 	"timer.h"
 
-1646948392 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/solver.cpp
+1646976760 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/solver.cpp
 	<cmath>
 	<vector>
 	<exception>
@@ -17,7 +18,7 @@
 	<eigen3/Eigen/SparseQR>
 	"solver.h"
 
-1646963329 /home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/solver.h
+1647005930 /home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/solver.h
 	<cmath>
 	<vector>
 	<exception>

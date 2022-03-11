@@ -19,10 +19,10 @@ struct Parameters{
     bool cylinder = false;
     double D = 6.0*1e-11*1e12; // um^2/s
     double alpha = 1.4*1e-16*1e12; // um^2/s
-    double R = 1.0; // um
+    double R = 5.0; // um
     double K = 32.51/0.033; //unitless
-    double vol_fraction = 0.1; //unitless
-    double area_fraction = 0.1; //unitless
+    double vol_fraction = 0.4; //unitless
+    double area_fraction = 0.4; //unitless
     double L = 100; // #um
     double cinit = 1.0; // #mol/um^3
     double Gamma(){
@@ -56,11 +56,15 @@ class Solver{
          */
         Solver(Parameters parameters, SolParams solparams);
         /**Getter for the memory of cvalues */
-        auto get_memory() {return m_memory;}
+        const auto& get_memory() {return m_memory;}
         /**Getter for the precision matrix */
-        auto get_precision() {return m_precision;}
+        const auto& get_precision() {return m_precision;}
         /**Getter for the rhs of the system */
-        auto get_rhs() {return m_rhs;}
+        const auto& get_rhs() {return m_rhs;}
+        /**Getter for timesteps */
+        const auto& get_timesteps() {return m_timesteps;}
+        /**Get last time step */
+        double last_timestep() {return m_timesteps.back();}
         /**Get the precomputed kernel values. @returns these values */
         std::vector<double>& omegavalues();
         /**Make the finite difference matrix. @returns this matrix */
@@ -77,14 +81,20 @@ class Solver{
         Eigen::SparseMatrix<double>& make_sparse_precision_from_dense(Eigen::MatrixXd& dense);
         /**Makes the LHS of the system */
         Eigen::VectorXd& make_equation_lhs();
+        /**Makes the LHS of the system */
+        Eigen::VectorXd& make_equation_lhs(double dt);
         /**Add Dirichlet (1, 0) condition */
         Eigen::VectorXd& add_lhs_bc(Eigen::VectorXd& vec);
         /**Makes the initial 0 condition (and 1 at boundary) */
         Eigen::VectorXd& make_initial_condition();
         /**Prepares the linear system. @returns the tuple with the precision matrix and the LHS */
+        std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> prepare_linear_system(double dt);
+        /**Makes a time step. Returns the result in this step*/
         std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> prepare_linear_system();
         /**Makes a time step. Returns the result in this step*/
         Eigen::VectorXd& step();
+        /**Makes a variable time step*/
+        Eigen::VectorXd& step(double dt);
     private:
         Parameters m_parameters;
         SolParams m_solparams;
@@ -95,6 +105,7 @@ class Solver{
         Eigen::PartialPivLU<Eigen::MatrixXd> m_decomposition;
         Eigen::SparseMatrix<double> m_sparse_precision;
         Eigen::SparseLU<Eigen::SparseMatrix<double>> m_sparse_decomposition;
+        std::vector<double> m_timesteps;
         double omegakernel(double t){
             double res;
             for(int k = 1; k <= m_solparams.nkernel; k++){

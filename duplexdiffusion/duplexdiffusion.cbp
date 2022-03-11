@@ -33,6 +33,9 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="main.cpp" />
+		<Unit filename="solver.cpp" />
+		<Unit filename="solver.h" />
+		<Unit filename="timer.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

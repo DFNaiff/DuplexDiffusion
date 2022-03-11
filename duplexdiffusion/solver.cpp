@@ -23,7 +23,8 @@ Solver::Solver(Parameters parameters, SolParams solparams)
              m_rhs(solparams.nspace),
              m_memory{},
              m_decomposition{},
-             m_sparse_precision(solparams.nspace, solparams.nspace) {
+             m_sparse_precision(solparams.nspace, solparams.nspace),
+             m_timesteps{} {
                 omegavalues(); //Precompute the values of omega
                 make_initial_condition(); //Creates the initial condition
                 make_precision_matrix(); //Creates the precision matrix
@@ -142,6 +143,26 @@ Eigen::VectorXd& Solver::make_equation_lhs(){
     return m_rhs;
 }
 
+Eigen::VectorXd& Solver::make_equation_lhs(double dt){
+    if(m_memory.size() == 0){
+        throw std::length_error("Empty list");
+    }
+    double beta = m_parameters.beta();
+    double cn_constant = 1.0/m_solparams.timestep + beta*m_omegavals[0]; //This is the term c_{n}
+    Eigen::VectorXd res = cn_constant*m_memory[m_memory.size() - 1]; //This is the term containing only c_{n}
+    for(int i = m_memory.size() - 2; i>= 0; i--){ //n-1, n, ..., 0
+        //Calculates the corresponding omega value
+        double omega = omegakernel(m_timesteps.back() - m_timesteps[i]);
+        if(omega/m_omegavals[0] < m_solparams.decay_limit){
+            break;
+        }
+//        int omega_i = m_memory.size() - 1 - i; //1, 2, ...
+        res -= beta*(m_memory[i+1] - m_memory[i])*omega; //The summation terms
+    }
+    m_rhs.col(0) = res.col(0); //Copy
+    return m_rhs;
+}
+
 Eigen::VectorXd& Solver::add_lhs_bc(Eigen::VectorXd& vec){
     //Dirichlet conditions : c(0) = c_init, c(L) = 0;
     vec(0) = m_parameters.cinit;
@@ -151,6 +172,7 @@ Eigen::VectorXd& Solver::add_lhs_bc(Eigen::VectorXd& vec){
 
 Eigen::VectorXd& Solver::make_initial_condition(){
     m_memory.clear();
+    m_timesteps.clear();
     Eigen::VectorXd cvec(m_solparams.nspace);
     //Puts the initial condition zero everywhere except at the boundary
     cvec(0) = m_parameters.cinit;
@@ -158,7 +180,15 @@ Eigen::VectorXd& Solver::make_initial_condition(){
         cvec(i) = 0.0;
     }
     m_memory.push_back(cvec);
+    m_timesteps.push_back(0.0);
     return m_memory[0];
+}
+
+std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> Solver::prepare_linear_system(double dt){
+    auto& lhs = make_equation_lhs();
+    add_lhs_bc(lhs);
+    std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> res(m_precision, lhs); //Makes the return tuple
+    return res;
 }
 
 std::tuple<Eigen::MatrixXd&, Eigen::VectorXd&> Solver::prepare_linear_system(){
@@ -172,6 +202,15 @@ Eigen::VectorXd& Solver::step(){
     prepare_linear_system(); //Prepare the LHS of the system
     Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
     m_memory.push_back(cnew); //Add to memory
+    m_timesteps.push_back(m_timesteps.back() + m_solparams.timestep);
+    return m_memory[m_memory.size()-1];
+}
+
+Eigen::VectorXd& Solver::step(double dt){
+    prepare_linear_system(dt); //Prepare the LHS of the system
+    Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
+    m_memory.push_back(cnew); //Add to memory
+    m_timesteps.push_back(m_timesteps.back() + dt);
     return m_memory[m_memory.size()-1];
 }
 

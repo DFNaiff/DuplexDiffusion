@@ -1,40 +1,35 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <string>
 
 #include "solver.h"
 #include "timer.h"
 
 //Main solver
-int main()
-{
-    duplexsolver::Parameters parameters;
-    duplexsolver::SolParams solparams;
-
-    parameters.R = 5;
-    //parameters.vol_fraction = 0.4; //0.4
-    parameters.area_fraction = 0.4;
-    parameters.cylinder = true;
-    parameters.L = 100;
-    solparams.maxwindow = 1000;//1000
-    solparams.timestep /= 1;
-    solparams.nspace = 21;
-    int nsteps = 100000;
-    nsteps *= 1;
-
+void fixed_timestep_solve(duplexsolver::Parameters& parameters,
+                          duplexsolver::SolParams& solparams,
+                          double tmax,
+                          std::string savename) {
     duplexsolver::Solver solver(parameters, solparams);
     solver.prepare_linear_system();
-    timer::Timer t;
     std::ofstream file;
-    std::ofstream filestep;
-    t.reset();
-    file.open("../data/result_realistic_cylinder");
-    for(int i = 0; i < nsteps; i++){
+    file.open("../data/result_test");
+    std::cout << savename << std::endl;
+    while(solver.last_timestep() < tmax){
         //solver.step();
-        file << solver.step().transpose() << std::endl;
+        auto current_val = solver.step();
+        file << solver.last_timestep() << " " << current_val.transpose() << std::endl;
     }
     file.close();
-    std::cout << t.elapsed() << std::endl;
-    std::cout << solver.get_precision() << std::endl;
-    std::cout << solver.get_rhs() << std::endl;
+}
+
+int main()
+{
+    //Just leave the defaults for now
+    duplexsolver::Parameters parameters;
+    duplexsolver::SolParams solparams;
+    std::string savename = "../result/test";
+    double tfinal = 25000.0;
+    fixed_timestep_solve(parameters, solparams, tfinal, savename);
 }

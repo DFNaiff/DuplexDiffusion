@@ -7,6 +7,7 @@
 #include <tuple>
 #include <deque>
 #include <iostream>
+#include <string>
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <eigen3/Eigen/Dense>
@@ -17,7 +18,7 @@ namespace duplexsolver
 {
 
 /**The physical parameters of the system */
-struct Parameters{
+struct PhysicalParams{
     bool cylinder = false;
     double D = 60.0; // um^2/s
     double alpha = 1.4*1e-4; // um^2/s
@@ -26,7 +27,6 @@ struct Parameters{
     double vol_fraction = 0.4; //unitless
     double area_fraction = 0.4; //unitless
     double L = 100; // #um
-    double cinit = 1.0; // #mol/um^3
     double Gamma(){
         if(!cylinder){return vol_fraction/(4.0/3*M_PI*R*R*R);} //1/um^3
         else{return area_fraction/(4.0*M_PI*R*R);} //1/um^2
@@ -37,8 +37,15 @@ struct Parameters{
     }
 };
 
+struct BoundaryConditions{
+    int left_bc_type = 1; //1 for Dirichlet, 2 for Neunmann
+    float left_bc_value = 1.0;
+    int right_bc_type = 1;
+    float right_bc_value = 0.0;
+};
+
 /**The solver parameters */
-struct SolParams{
+struct SolverParams{
     int nspace = 21;
     double kernel_limit = 0.01;
     int maxkernel = 1000;
@@ -54,10 +61,10 @@ class Solver{
     public:
         /**
          * Initializer.
-         * @param parameters - The physical parameters of the problem
+         * @param parameters - The physical physparams of the problem
          * @param solparams - The solver parameters
          */
-        Solver(Parameters parameters, SolParams solparams);
+        Solver(PhysicalParams physparams, SolverParams solparams, BoundaryConditions bcconditions);
         /**Getter for the memory of cvalues */
         const auto& get_memory() {return m_memory;}
         /**Getter for the precision matrix */
@@ -73,8 +80,9 @@ class Solver{
         /**Get last step error*/
         double get_last_step_error();
     private:
-        Parameters m_parameters;
-        SolParams m_solparams;
+        PhysicalParams m_physparams;
+        SolverParams m_solparams;
+        BoundaryConditions m_bcconditions;
         std::vector<double> m_omegavals;
         Eigen::VectorXd m_rhs;
         std::deque<Eigen::VectorXd> m_memory;
@@ -114,10 +122,10 @@ class Solver{
             double base = 1.0;
             for(int k = 1; k <= m_solparams.maxkernel; k++){
                 double coef{};
-                if(!m_parameters.cylinder){
-                    coef = m_parameters.alpha*std::pow(M_PI*k/m_parameters.R, 2);
+                if(!m_physparams.cylinder){
+                    coef = m_physparams.alpha*std::pow(M_PI*k/m_physparams.R, 2);
                 } else {
-                    coef = m_parameters.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_parameters.R, 2);
+                    coef = m_physparams.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_physparams.R, 2);
                 }
                 double increment = std::exp(-coef*t);
                 if(k == 1){

@@ -26,9 +26,10 @@ namespace duplexsolver{
         }
     }
 
-    Solver::Solver(Parameters parameters, SolParams solparams)
-                :m_parameters{parameters},
+    Solver::Solver(PhysicalParams physparams, SolverParams solparams, BoundaryConditions bcconditions)
+                :m_physparams{physparams},
                  m_solparams{solparams},
+                 m_bcconditions{bcconditions},
                  m_omegavals{},
                  m_rhs(solparams.nspace),
                  m_memory{},
@@ -61,10 +62,10 @@ namespace duplexsolver{
     }
 
     Eigen::SparseMatrix<double>& Solver::make_finite_difference_matrix(Eigen::SparseMatrix<double>& matrix, bool initialized){
-        //n points -> n-1 intervals -> h = parameters.L/(n-1)
+        //n points -> n-1 intervals -> h = physparams.L/(n-1)
         int n = m_solparams.nspace;
-        double h = m_parameters.L/(n-1); //The grid spacing
-        double coef = m_parameters.D/(h*h); //Finite element coefficient
+        double h = m_physparams.L/(n-1); //The grid spacing
+        double coef = m_physparams.D/(h*h); //Finite element coefficient
         for(int i = 0; i < n; i++){
             for(int j = 0; j < n; j++){
                 if(i == j){
@@ -80,7 +81,7 @@ namespace duplexsolver{
     }
 
     Eigen::SparseMatrix<double>& Solver::add_step_to_diag(Eigen::SparseMatrix<double>& matrix){ //Adds to diagonal of precision matrix the LHS terms
-        double constant = 1.0/m_solparams.timestep + m_parameters.beta()*m_omegavals[0]; //The LHS term
+        double constant = 1.0/m_solparams.timestep + m_physparams.beta()*m_omegavals[0]; //The LHS term
         int n = m_solparams.nspace;
         for(int i = 0; i < n; i++){ //Adds to the diagonal
             matrix.coeffRef(i, i) += constant;
@@ -89,7 +90,7 @@ namespace duplexsolver{
     }
 
     Eigen::SparseMatrix<double>& Solver::add_step_to_diag(Eigen::SparseMatrix<double>& matrix, double dt){ //Adds to diagonal of precision matrix the LHS terms
-        double constant = 1.0/dt + m_parameters.beta()*omegakernel(dt/2); //The LHS term
+        double constant = 1.0/dt + m_physparams.beta()*omegakernel(dt/2); //The LHS term
         int n = m_solparams.nspace;
         for(int i = 0; i < n; i++){ //Adds to the diagonal
             matrix.coeffRef(i, i) += constant;
@@ -99,12 +100,21 @@ namespace duplexsolver{
     }
 
     Eigen::SparseMatrix<double>& Solver::add_matrix_bc(Eigen::SparseMatrix<double>& matrix){
-        //Dirichlet conditions
-        //Put dirichlet condition on first line, [1, 0,...,0]
-        matrix.coeffRef(0, 0) = 1.0;
-        matrix.coeffRef(0, 1) = 0.0;
-        matrix.coeffRef(matrix.rows() - 1, matrix.rows() - 1) = 1.0;
-        matrix.coeffRef(matrix.rows() - 1, matrix.rows() - 2) = 0.0;
+        double h = m_physparams.L/(m_solparams.nspace-1); //The grid spacing
+        if(m_bcconditions.left_bc_type == 1){ //x_0 = left_bc_value
+            matrix.coeffRef(0, 0) = 1.0;
+            matrix.coeffRef(0, 1) = 0.0;
+        } else if (m_bcconditions.left_bc_type == 2){ //(x_1 - x_0)/h = -right_bc_value -> x0/h - x1/h = right_bc_value (we consider flux inlet condition here)
+            matrix.coeffRef(0, 0) = 1.0/h;
+            matrix.coeffRef(0, 1) = 1.0/h;
+        }
+        if(m_bcconditions.right_bc_type == 1){ //
+            matrix.coeffRef(matrix.rows() - 1, matrix.rows() - 1) = 1.0;
+            matrix.coeffRef(matrix.rows() - 1, matrix.rows() - 2) = 0.0;
+        } else if (m_bcconditions.right_bc_type == 2){ //(x_{n-1} - x_{n-2})/h = right_bc_value
+            matrix.coeffRef(matrix.rows() - 1, matrix.rows() - 1) = 1.0/h;
+            matrix.coeffRef(matrix.rows() - 1, matrix.rows() - 2) = -1.0/h;
+        }
         return matrix;
     }
 
@@ -134,7 +144,7 @@ namespace duplexsolver{
         if(m_memory.size() == 0){
             throw std::length_error("Empty list");
         }
-        double beta = m_parameters.beta();
+        double beta = m_physparams.beta();
         double cn_constant = 1.0/m_solparams.timestep + beta*m_omegavals[0]; //This is the term c_{n}
         Eigen::VectorXd res = cn_constant*m_memory[m_memory.size() - 1]; //This is the term containing only c_{n}
         for(int i = m_memory.size() - 2; i>= 0; i--){ //n-1, n, ..., 0
@@ -153,7 +163,7 @@ namespace duplexsolver{
         if(m_memory.size() == 0){
             throw std::length_error("Empty list");
         }
-        double beta = m_parameters.beta();
+        double beta = m_physparams.beta();
         double omega_base = omegakernel(dt/2); //(t_{i} + dt - (t_{i} + d_t + t_i)/2) = dt/2
         double cn_constant = 1.0/dt + beta*omega_base; //This is the term c_{n}
         Eigen::VectorXd res = cn_constant*m_memory[m_memory.size() - 1]; //This is the term containing only c_{n}
@@ -172,8 +182,8 @@ namespace duplexsolver{
 
     Eigen::VectorXd& Solver::add_lhs_bc(Eigen::VectorXd& vec){
         //Dirichlet conditions : c(0) = c_init, c(L) = 0;
-        vec(0) = m_parameters.cinit;
-        vec(vec.rows()-1) = 0;
+        vec(0) = m_bcconditions.left_bc_value;
+        vec(vec.rows()-1) = m_bcconditions.right_bc_value;
         return vec;
     }
 
@@ -181,9 +191,9 @@ namespace duplexsolver{
         m_memory.clear();
         m_timesteps.clear();
         Eigen::VectorXd cvec(m_solparams.nspace);
-        //Puts the initial condition zero everywhere except at the boundary
-        cvec(0) = m_parameters.cinit;
-        for(int i = 1; i < m_solparams.nspace; i++){
+        //Puts the initial condition zero (boundary values will be set automatically later)
+        //cvec(0) = m_physparams.cinit;
+        for(int i = 0; i < m_solparams.nspace; i++){
             cvec(i) = 0.0;
         }
         m_memory.push_back(cvec);

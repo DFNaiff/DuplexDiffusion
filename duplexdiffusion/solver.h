@@ -19,7 +19,8 @@ namespace duplexsolver
 
 /**The physical parameters of the system */
 struct PhysicalParams{
-    bool cylinder = false;
+    int bulk_geom = 0; //0 for plate, 1 for cylinder, 2 for sphere
+    int precip_geom = 0; //0 for spherical, 1 for cylindrical
     double D = 60.0; // um^2/s
     double alpha = 1.4*1e-4; // um^2/s
     double R = 5.0; // um
@@ -27,13 +28,20 @@ struct PhysicalParams{
     double vol_fraction = 0.4; //unitless
     double area_fraction = 0.4; //unitless
     double L = 100; // #um
+    double xinit = 0.0; // #um
     double Gamma(){
-        if(!cylinder){return vol_fraction/(4.0/3*M_PI*R*R*R);} //1/um^3
-        else{return area_fraction/(4.0*M_PI*R*R);} //1/um^2
+        if(precip_geom == 0){
+            return vol_fraction/(4.0/3*M_PI*R*R*R);} //1/um^3
+        else if (precip_geom == 1){
+            return area_fraction/(4.0*M_PI*R*R);
+        } //1/um^2
     }
     double beta(){
-        if(!cylinder){return 8*M_PI*R*Gamma()*alpha*K;}
-        else{return 4*M_PI*Gamma()*alpha*K;}
+        if(precip_geom == 0){
+            return 8*M_PI*R*Gamma()*alpha*K;
+        } else if (precip_geom == 1){
+            return 4*M_PI*Gamma()*alpha*K;
+        }
     }
 };
 
@@ -71,6 +79,8 @@ class Solver{
         const auto& get_timesteps() {return m_timesteps;}
         /**Get last time step */
         double last_timestep() {return m_timesteps.back();}
+        /**Get the x-linspace */
+        std::vector<double> get_xspace();
         /**Makes a fixed time step*/
         Eigen::VectorXd& step();
         /**Makes a variable time step*/
@@ -117,28 +127,7 @@ class Solver{
         /**Makes a time step. Returns the result in this step*/
         void prepare_linear_system();
         /**Makes a time step. Returns the result in this step*/
-        double omegakernel(double t){
-            double res = 0;
-            double base = 1.0;
-            for(int k = 1; k <= m_solparams.maxkernel; k++){
-                double coef{};
-                if(!m_physparams.cylinder){
-                    coef = m_physparams.alpha*std::pow(M_PI*k/m_physparams.R, 2);
-                } else {
-                    coef = m_physparams.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_physparams.R, 2);
-                }
-                double increment = std::exp(-coef*t);
-                if(k == 1){
-                    base = increment;
-                } else {
-                    if(increment/base < m_solparams.decay_limit){
-                        break;
-                    }
-                }
-                res += increment;
-            }
-            return res;
-        }
+        double omegakernel(double t);
 
 };
 

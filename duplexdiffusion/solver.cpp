@@ -42,6 +42,37 @@ namespace duplexsolver{
                     make_precision_matrix(); //Creates the precision matrix
                  };
 
+    std::vector<double> Solver::get_xspace(){
+        std::vector<double> res;
+        for(int i = 0; i < m_solparams.nspace; i++){
+            res.push_back(double(i)/(m_solparams.nspace-1)*m_physparams.L + m_physparams.xinit);
+        }
+        return res;
+    }
+
+    double Solver::omegakernel(double t){
+        double res = 0;
+        double base = 1.0;
+        for(int k = 1; k <= m_solparams.maxkernel; k++){
+            double coef{};
+            if(m_physparams.precip_geom == 0){ //Spherical case
+                coef = m_physparams.alpha*std::pow(M_PI*k/m_physparams.R, 2);
+            } else if (m_physparams.precip_geom == 1){ //Cylindrical case
+                coef = m_physparams.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_physparams.R, 2);
+            }
+            double increment = std::exp(-coef*t);
+            if(k == 1){
+                base = increment;
+            } else {
+                if(increment/base < m_solparams.decay_limit){
+                    break;
+                }
+            }
+            res += increment;
+        }
+        return res;
+    }
+
     std::vector<double>& Solver::omegavalues(){
         m_omegavals.clear();
         int j = 0;
@@ -65,15 +96,33 @@ namespace duplexsolver{
         //n points -> n-1 intervals -> h = physparams.L/(n-1)
         int n = m_solparams.nspace;
         double h = m_physparams.L/(n-1); //The grid spacing
-        double coef = m_physparams.D/(h*h); //Finite element coefficient
+        double coeff1_base = m_physparams.D/h;
+        double coeff2 = m_physparams.D/(h*h); //Finite element coefficient
+        double drift_const = m_physparams.bulk_geom; //Nomeclature coincides with drift_const
+        std::vector<double> rspace = get_xspace(); //1/x. We will replace it inplace
+        for(int i = 0; i < rspace.size(); i++){
+            double x = rspace[i];
+            if(x == 0.0){
+                rspace[i] = 0.0; //This should be suppressed by a boundary condition anyway
+            } else {
+                rspace[i] = 1/x;
+            }
+        }
+
         for(int i = 0; i < n; i++){
             for(int j = 0; j < n; j++){
-                if(i == j){
-                    insertion_or_coeffRef(matrix, i, j, 2*coef, initialized);
-                } else if ((i == j - 1) || (i == j + 1)){
-                    insertion_or_coeffRef(matrix, i, j, -coef, initialized);
-                } else {
-                    insertion_or_coeffRef(matrix, i, j, 0.0, initialized);
+                if(j == i){ //x_i
+                    double item = 2*coeff2;
+                    insertion_or_coeffRef(matrix, i, j, item, initialized);
+                } else if (j == i - 1) { //x_{i-1}
+                    double item = -(coeff2 - drift_const*rspace[i]*coeff1_base);
+                    insertion_or_coeffRef(matrix, i, j, item, initialized);
+                } else if (j == i + 1){ //x_{i+1}
+                    double item = -(coeff2 + drift_const*rspace[i]*coeff1_base);
+                    insertion_or_coeffRef(matrix, i, j, item, initialized);
+                } else { //No coefficient
+                    double item = 0.0;
+                    insertion_or_coeffRef(matrix, i, j, item, initialized);
                 }
             }
         }

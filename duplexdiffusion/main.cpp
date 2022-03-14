@@ -34,11 +34,12 @@ void fixed_timestep_solve(duplexsolver::PhysicalParams& physparams,
                           std::string savename) {
     duplexsolver::Solver solver(physparams, solparams, bcconditions);
     std::ofstream file;
+    std::vector<double> xspace = solver.get_xspace();
     file.open(savename);
     //Write space line
     file << 0.0 << " "; //Dummy
     for(int i = 0; i < solparams.nspace; i++){
-        double x = double(i)/(solparams.nspace-1)*physparams.L;
+        double x = xspace[i];
         if(i == solparams.nspace-1){
             file << x << std::endl;
         } else {
@@ -99,12 +100,20 @@ void json_reader(std::string filename,
     inputstring = inputbuffer.str();
     nlohmann::json jsondata = nlohmann::json::parse(inputstring, nullptr, true, true);
 
-    physparams.cylinder = jsondata.at("physical").at("cylinder");
-    physparams.D = jsondata.at("physical").at("matrixD");
-    physparams.alpha = jsondata.at("physical").at("precipitateD");
-    physparams.K = jsondata.at("physical").at("cratio");
-    physparams.vol_fraction = jsondata.at("physical").at("vol_fraction");
-    physparams.area_fraction = jsondata.at("physical").at("area_fraction");
+    try{ //Has default value
+        physparams.bulk_geom= jsondata.at("physical").at("bulk_geometry");
+    } catch(nlohmann::detail::out_of_range e){}
+    try{ //Has default value
+        physparams.precip_geom = jsondata.at("physical").at("precipitate_geometry");
+    } catch(nlohmann::detail::out_of_range e){}
+    physparams.D = jsondata.at("physical").at("matrixD"); //Required
+    physparams.alpha = jsondata.at("physical").at("precipitateD"); //Required
+    physparams.K = jsondata.at("physical").at("cratio"); //Required
+    if(physparams.precip_geom == 0){
+        physparams.vol_fraction = jsondata.at("physical").at("vol_fraction");
+    } else if (physparams.precip_geom == 1){
+        physparams.area_fraction = jsondata.at("physical").at("area_fraction");
+    }
     physparams.L = jsondata.at("physical").at("length");
 
     bcconditions.left_bc_type = jsondata.at("bcconditions").at("left_bc_type");
@@ -157,7 +166,7 @@ int main(int argc, char **argv)
     if(argc >= 4){
         inputstring = argv[3];
     } else {
-        inputstring = "../data/testcli/params.json";
+        inputstring = "../params/params.json";
     }
 
     std::string instring = "Reading parameters from " + inputstring + "\n" +

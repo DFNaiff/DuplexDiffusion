@@ -100,7 +100,7 @@ namespace duplexsolver{
         double coeff2 = m_physparams.D/(h*h); //Finite element coefficient
         double drift_const = m_physparams.bulk_geom; //Nomeclature coincides with drift_const
         std::vector<double> rspace = get_xspace(); //1/x. We will replace it inplace
-        for(int i = 0; i < rspace.size(); i++){
+        for(unsigned i = 0; i < rspace.size(); i++){
             double x = rspace[i];
             if(x == 0.0){
                 rspace[i] = 0.0; //This should be suppressed by a boundary condition anyway
@@ -199,7 +199,8 @@ namespace duplexsolver{
         for(int i = m_memory.size() - 2; i>= 0; i--){ //n-1, n, ..., 0
             //Access memory right from left, and precomputed kernel values from left to right
             int omega_i = m_memory.size() - 1 - i; //1, 2, ...
-            if(omega_i >= m_omegavals.size()){ //Exceeded the precomputed window
+            int maxwindow = m_omegavals.size();
+            if(omega_i >= maxwindow){ //Exceeded the precomputed window
                 break;
             }
             res -= beta*(m_memory[i+1] - m_memory[i])*m_omegavals[omega_i]; //The summation terms
@@ -267,9 +268,13 @@ namespace duplexsolver{
         prepare_linear_system(); //Prepare the LHS of the system
         Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
         m_memory.push_back(cnew); //Add to memory
-        if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_front();};
+        if(int(m_memory.size()) > m_solparams.maxwindow){
+            m_memory.pop_front();
+        }
         m_timesteps.push_back(m_timesteps.back() + m_solparams.timestep);
-        if(m_timesteps.size() > m_solparams.maxwindow){m_timesteps.pop_front();};
+        if(int(m_timesteps.size()) > m_solparams.maxwindow){
+            m_timesteps.pop_front();
+        };
         return m_memory[m_memory.size()-1];
     }
 
@@ -277,9 +282,13 @@ namespace duplexsolver{
         prepare_linear_system(dt); //Prepare the LHS of the system
         Eigen::VectorXd cnew = m_sparse_decomposition.solve(m_rhs); //Solves the system
         m_memory.push_back(cnew); //Add to memory
-        if(m_memory.size() > m_solparams.maxwindow){m_memory.pop_front();};
+        if(int(m_memory.size()) > m_solparams.maxwindow){
+            m_memory.pop_front();
+        }
         m_timesteps.push_back(m_timesteps.back() + dt);
-        if(m_timesteps.size() > m_solparams.maxwindow){m_timesteps.pop_front();};
+        if(int(m_timesteps.size()) > m_solparams.maxwindow){
+            m_timesteps.pop_front();
+        };
         return m_memory[m_memory.size()-1];
     }
 

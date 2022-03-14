@@ -8,6 +8,7 @@
 #include <deque>
 #include <iostream>
 #include <string>
+#include <exception>
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <eigen3/Eigen/Dense>
@@ -34,13 +35,17 @@ struct PhysicalParams{
             return vol_fraction/(4.0/3*M_PI*R*R*R);} //1/um^3
         else if (precip_geom == 1){
             return area_fraction/(4.0*M_PI*R*R);
-        } //1/um^2
+        } else {
+            throw std::domain_error("Not a valid precipitate geometry");
+        }//1/um^2
     }
     double beta(){
         if(precip_geom == 0){
             return 8*M_PI*R*Gamma()*alpha*K;
         } else if (precip_geom == 1){
             return 4*M_PI*Gamma()*alpha*K;
+        } else {
+            throw std::domain_error("Not a valid precipitate geometry");
         }
     }
 };

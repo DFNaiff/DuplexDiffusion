@@ -101,7 +101,7 @@ void json_reader(std::string filename,
     nlohmann::json jsondata = nlohmann::json::parse(inputstring, nullptr, true, true);
 
     try{ //Has default value
-        physparams.bulk_geom= jsondata.at("physical").at("bulk_geometry");
+        physparams.bulk_geom = jsondata.at("physical").at("bulk_geometry");
     } catch(nlohmann::detail::out_of_range e){}
     try{ //Has default value
         physparams.precip_geom = jsondata.at("physical").at("precipitate_geometry");

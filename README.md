@@ -6,7 +6,9 @@ Depends on boost::math and eigen3. JSON parsing done via "JSON for Modern C++" h
 
 Usage:\
 After installing, just use the simple command line application:\
-./duplexdiffusion tfinal savefile paramfile\
+```
+$ ./duplexdiffusion tfinal savefile paramfile
+```
 \
 With tfinal being a number (final time for simulator),
 savefile being where the result is stored,

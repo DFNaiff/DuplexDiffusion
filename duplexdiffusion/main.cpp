@@ -3,12 +3,28 @@
 #include <chrono>
 #include <string>
 #include <sstream>
+#include <stdexcept>
+#include <memory>
+#include <cmath>
 
 #include "json.hpp"
 
 #include "solver.h"
 #include "timer.h"
 #include "controller.h"
+
+//Code snippet taken from https://stackoverflow.com/questions/2342162/stdstring-formatting-like-sprintf,
+//in the answer given by iFreilicht
+template<typename ... Args>
+std::string string_format( const std::string& format, Args ... args )
+{
+    int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+    if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+    auto size = static_cast<size_t>( size_s );
+    std::unique_ptr<char[]> buf( new char[ size ] );
+    std::snprintf( buf.get(), size, format.c_str(), args ... );
+    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+}
 
 //Main solver
 void fixed_timestep_solve(duplexsolver::PhysicalParams& physparams,
@@ -30,10 +46,19 @@ void fixed_timestep_solve(duplexsolver::PhysicalParams& physparams,
         }
     }
     //Solve and write
+    double percentage = 0.0;
+    int precision = 1;
+    double precisionmultiplier = std::pow(10, precision);
     while(solver.last_timestep() < tmax){
         //solver.step();
         auto current_val = solver.step();
         file << solver.last_timestep() << " " << current_val.transpose() << std::endl;
+
+        double currper = std::floor(100*precisionmultiplier*solver.last_timestep()/tmax)/precisionmultiplier;
+        if(currper >= percentage){
+            percentage = currper;
+            std::cout << "Percentage of calculation done:" << percentage << "%\r";
+        }
     }
     file.close();
 }
@@ -110,11 +135,6 @@ void json_reader(std::string filename,
 
 int main(int argc, char **argv)
 {
-
-//    //Just leave the defaults for now
-    //for(int i = 0; i < argc; i++){
-    //    std::cout << argv[i] << std::endl;
-    //}
     duplexsolver::PhysicalParams physparams;
     duplexsolver::SolverParams solparams;
     duplexsolver::BoundaryConditions bcconditions;
@@ -140,17 +160,17 @@ int main(int argc, char **argv)
         inputstring = "../data/testcli/params.json";
     }
 
+    std::string instring = "Reading parameters from " + inputstring + "\n" +
+                           string_format("Running model until t=%f\n", tfinal);
+    std::cout << instring;
+    timer::Timer timerobj;
+    timerobj.reset();
+
     json_reader(inputstring, physparams, solparams, bcconditions);
-    //std::string savename = "../data/testcli/result_json_toy";
-    //double tfinal = 25.0;
     fixed_timestep_solve(physparams, solparams, bcconditions, tfinal, savestring);
 
-//
-//    std::string savename = "../data/result_toy";
-//    double tfinal = 25.0;
-//
-//    //control::Controller controller(0.025, 25.00);
-//    //variable_timestep_solve(physparams, solparams, controller, tfinal, savename);
-//
-//    fixed_timestep_solve(physparams, solparams, bcconditions, tfinal, savename);
+    double elapsed = timerobj.elapsed();
+    std::string outstring = string_format("Done! The elapsed time was %f\n", elapsed) +
+                            "Result file can be found in " + savestring + "\n";
+    std::cout << outstring;
 }

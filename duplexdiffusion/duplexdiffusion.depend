@@ -1,10 +1,13 @@
 # depslib dependency file v1.0
-1647280763 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
+1647285269 source:/home/dfnaiff/Danilo/PythonWorkspace/DuplexDiffusion/duplexdiffusion/main.cpp
 	<iostream>
 	<fstream>
 	<chrono>
 	<string>
 	<sstream>
+	<stdexcept>
+	<memory>
+	<cmath>
 	"json.hpp"
 	"solver.h"
 	"timer.h"

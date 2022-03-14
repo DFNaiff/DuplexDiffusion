@@ -1,0 +1,27 @@
+//Note: remember to look for coherence in your units. Here, the default is um for space and s for time
+//The parameters in default are for hydrogen diffusion in duplex steels, with ferrite as matrix and austenite as precipitate
+{
+	"physical": {
+		"cylinder": false, //True if precipitates are assumed to be cylindrical, false if they are asssumed to be spherical
+		"matrixD": 60.0, //Diffusion coefficient of the matrix
+		"precipitateD": 1.4e-4, //Diffusion coefficient of the precipitate
+		"cratio": 985.15, //Ratio of concentrations between precipitate and matrix. That is, at the boundary, c_precipitate = solubilityratio*c_matrix
+		"vol_fraction": 0.4, //Volume fraction of precipitates. Valid for spherical precipitates
+		"area_fraction": 0.4, //Area fraction of precipitates. Valid for cylindrical precipitates
+		"length": 100.0 //Length of the simulated structure
+	},
+	"bcconditions": {
+		"left_bc_type": 1, //1 for Dirichlet, 2 for Neunmann
+		"left_bc_value": 1.0,
+		"right_bc_type": 1, //1 For Dirichlet, 2 for Neunmann
+		"right_bc_value": 1.0
+	},
+	"solver": {
+		"nspace": 21, //Number of discretization points for space
+		"dt": 0.25, //Time step size,
+		"kernel_limit": 0.01, //Kernel convergence limit,
+		"maxkernel": 1000, //Maximum number of evaluations for kernel,
+		"decay_limit": 0.01, //Integral convergence limit,
+		"maxwindow": 1000 //Maximum number of past evaluations for integral
+	}
+}

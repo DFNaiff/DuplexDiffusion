@@ -1,8 +1,11 @@
 # Duplex Diffusion
 A model and simulator for 1d component diffusion in biphasic materials (one matrix and one disperse phase),
 considering only their diffusion coefficients and their solubilities,
-volumetric fraction and mean volume. In progress, but one can install already if he wants.
-
+volume/area fraction and mean radius. In progress, but one can install already if he wants.
+\
+Accepts for bulk geometry plates, cylinder or spheres. Accepts for precipitate
+geometry spheres or cylinders.
+\
 Depends on boost::math and eigen3. JSON parsing done via "JSON for Modern C++" (header file included here).
 
 # Usage

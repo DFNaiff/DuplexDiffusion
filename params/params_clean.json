@@ -1,5 +1,4 @@
-//Note: remember to look for coherence in your units. Here, the default is um for space and s for time
-//The parameters in default are for hydrogen diffusion in duplex steels, with ferrite as matrix and austenite as precipitate
+//This is for comparison, a clean bulk geometry. vol_fraction = 0 and we limit windows since they are not needed
 {
 	"physical": {
 		"bulk_geometry": 0, //0 for plate, 1 for cylinder, 2 for sphere. Not required (defaults to 0)
@@ -7,7 +6,7 @@
 		"matrixD": 60.0, //Diffusion coefficient of the matrix. Required.
 		"precipitateD": 1.4e-4, //Diffusion coefficient of the precipitate. Required.
 		"cratio": 985.15, //Ratio of concentrations between precipitate and matrix. Required
-		"vol_fraction": 0.4, //Volume fraction of precipitates. Required for precipitate_geometry = 0;
+		"vol_fraction": 0.0, //Volume fraction of precipitates. Required for precipitate_geometry = 0;
 		"area_fraction": 0.4, //Area fraction of precipitates. Required for precipitate_geometry = 0;
 		"length": 100.0 //Length of the simulated structure. Required.
 	},
@@ -20,9 +19,9 @@
 	"solver": { //None of these values are required. All defaults to the values given in this file
 		"nspace": 21, //Number of discretization points for space
 		"dt": 0.25, //Time step size,
-		"kernel_limit": 0.001, //Kernel convergence limit,
-		"maxkernel": 10000, //Maximum number of evaluations for kernel,
-		"decay_limit": 0.001, //Integral convergence limit,
-		"maxwindow": 10000 //Maximum number of past evaluations for integral
+		"kernel_limit": 0.01, //Kernel convergence limit,
+		"maxkernel": 2, //Maximum number of evaluations for kernel,
+		"decay_limit": 0.01, //Integral convergence limit,
+		"maxwindow": 2 //Maximum number of past evaluations for integral
 	}
 }

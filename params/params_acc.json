@@ -20,9 +20,9 @@
 	"solver": { //None of these values are required. All defaults to the values given in this file
 		"nspace": 21, //Number of discretization points for space
 		"dt": 0.25, //Time step size,
-		"kernel_limit": 0.001, //Kernel convergence limit,
-		"maxkernel": 10000, //Maximum number of evaluations for kernel,
-		"decay_limit": 0.001, //Integral convergence limit,
-		"maxwindow": 10000 //Maximum number of past evaluations for integral
+		"kernel_limit": 0.0001, //Kernel convergence limit,
+		"maxkernel": 1000000, //Maximum number of evaluations for kernel,
+		"decay_limit": 0.0001, //Integral convergence limit,
+		"maxwindow": 1000000 //Maximum number of past evaluations for integral
 	}
 }

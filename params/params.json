@@ -15,7 +15,7 @@
 		"left_bc_type": 1, //1 for Dirichlet, 2 for Neunmann.
 		"left_bc_value": 1.0, //Value of BC at left.
 		"right_bc_type": 1, //1 For Dirichlet, 2 for Neunmann.
-		"right_bc_value": 1.0 //Value of BC at left.
+		"right_bc_value": 0.0 //Value of BC at left.
 	},
 	"solver": { //None of these values are required. All defaults to the values given in this file
 		"nspace": 21, //Number of discretization points for space

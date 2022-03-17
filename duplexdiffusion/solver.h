@@ -94,11 +94,15 @@ class Solver{
         void cancel_last_step();
         /**Get last step error*/
         double get_last_step_error();
+        /**Get concentration on precipitate*/
+        Eigen::VectorXd get_precipitate_concentration();
+        //Eigen::VectorXd get_precipitate_concentration(double dt);
     private:
         PhysicalParams m_physparams;
         SolverParams m_solparams;
         BoundaryConditions m_bcconditions;
         std::vector<double> m_omegavals;
+        std::vector<double> m_omegavalsp;
         Eigen::VectorXd m_rhs;
         std::deque<Eigen::VectorXd> m_memory;
         Eigen::SparseMatrix<double> m_sparse_precision;
@@ -106,7 +110,7 @@ class Solver{
         bool m_sparse_initialized;
         std::deque<double> m_timesteps;
         /**Get the precomputed kernel values. @returns these values */
-        std::vector<double>& omegavalues();
+        std::vector<double>& omegavalues(std::vector<double>& omegavals, int kerneltype=0);
         /**Make the finite difference matrix. @returns this matrix */
         Eigen::SparseMatrix<double>& make_finite_difference_matrix(Eigen::SparseMatrix<double>& matrix, bool initialized=false);
         /**Adds the time terms to the diagonal of the finite difference matrix. @returns this matrix */
@@ -132,8 +136,7 @@ class Solver{
         /**Makes a time step. Returns the result in this step*/
         void prepare_linear_system();
         /**Makes a time step. Returns the result in this step*/
-        double omegakernel(double t);
-
+        double omegakernel(double t, int kerneltype=0);
 };
 
 }

@@ -31,13 +31,15 @@ namespace duplexsolver{
                  m_solparams{solparams},
                  m_bcconditions{bcconditions},
                  m_omegavals{},
+                 m_omegavalsp{},
                  m_rhs(solparams.nspace),
                  m_memory{},
                  m_sparse_precision(solparams.nspace, solparams.nspace),
                  m_sparse_decomposition{},
                  m_sparse_initialized{false},
                  m_timesteps{} {
-                    omegavalues(); //Precompute the values of omega
+                    omegavalues(m_omegavals); //Precompute the values of omega
+                    omegavalues(m_omegavalsp, 1); //Precompute the values of omega precipitate
                     make_initial_condition(); //Creates the initial condition
                     make_precision_matrix(); //Creates the precision matrix
                  };
@@ -50,17 +52,37 @@ namespace duplexsolver{
         return res;
     }
 
-    double Solver::omegakernel(double t){
+    double Solver::omegakernel(double t, int kerneltype){
+        //kerneltype: 0 for EDP calculation, 1 for precipitate calculation
         double res = 0;
         double base = 1.0;
         for(int k = 1; k <= m_solparams.maxkernel; k++){
+            double uk{};
             double coef{};
-            if(m_physparams.precip_geom == 0){ //Spherical case
-                coef = m_physparams.alpha*std::pow(M_PI*k/m_physparams.R, 2);
-            } else if (m_physparams.precip_geom == 1){ //Cylindrical case
-                coef = m_physparams.alpha*std::pow(boost::math::cyl_bessel_j_zero(0.0, k)/m_physparams.R, 2);
+            double increment{};
+
+            if(m_physparams.precip_geom == 0){
+                uk = M_PI*k;
+            } else if (m_physparams.precip_geom == 1){
+                uk = boost::math::cyl_bessel_j_zero(0.0, k);
+            } else {
+                throw std::domain_error("Not a valid precipitate geometry");
             }
-            double increment = std::exp(-coef*t);
+            coef = m_physparams.alpha*std::pow(uk/m_physparams.R, 2);
+            if(kerneltype == 0){
+                increment = std::exp(-coef*t);
+            } else if (kerneltype == 1){
+                if(m_physparams.precip_geom == 0){
+                    increment = 3.0/(2*uk*uk)*std::exp(-coef*t);
+                } else if (m_physparams.precip_geom == 1){
+                    increment = 1.0/(4*uk*uk)*std::exp(-coef*t);
+                } else {
+                    throw std::domain_error("Not a valid precipitate geometry");
+                }
+            } else {
+                throw std::domain_error("Not a valid kernel type");
+            }
+
             if(k == 1){
                 base = increment;
             } else {
@@ -73,23 +95,23 @@ namespace duplexsolver{
         return res;
     }
 
-    std::vector<double>& Solver::omegavalues(){
-        m_omegavals.clear();
+    std::vector<double>& Solver::omegavalues(std::vector<double>& omegavals, int kerneltype){
+        omegavals.clear();
         int j = 0;
         double t = m_solparams.timestep*(j + 0.5);
         double omegabase = omegakernel(t);
         double omega = omegabase;
-        m_omegavals.push_back(omega);
+        omegavals.push_back(omega);
         while(omega/omegabase > m_solparams.decay_limit){ //The main condition of significanse
             j += 1;
             t = m_solparams.timestep*(j + 0.5);
-            omega = omegakernel(t);
-            m_omegavals.push_back(omega);
+            omega = omegakernel(t, kerneltype);
+            omegavals.push_back(omega);
             if(j >= m_solparams.maxwindow-1){ //Windows has exceeded side
                 break;
             }
         }
-        return m_omegavals;
+        return omegavals;
     }
 
     Eigen::SparseMatrix<double>& Solver::make_finite_difference_matrix(Eigen::SparseMatrix<double>& matrix, bool initialized){
@@ -304,6 +326,24 @@ namespace duplexsolver{
         Eigen::VectorXd& cnew = m_memory[m_memory.size()-1];
         Eigen::VectorXd& cprev = m_memory[m_memory.size()-2];
         double res = (cnew - cprev).cwiseAbs().maxCoeff()/(cprev.cwiseAbs().maxCoeff());
+        return res;
+    }
+
+    Eigen::VectorXd Solver::get_precipitate_concentration(){
+        if(m_memory.size() == 0){
+            throw std::length_error("Empty list");
+        }
+        double K = m_physparams.K;
+        Eigen::VectorXd res = K*m_memory.back();
+        for(int i = m_memory.size() - 2; i>= 0; i--){ //n-1, n-2, ..., 0
+            //Access memory right from left, and precomputed kernel values from left to right
+            int omega_i = m_memory.size() - 1 - i; //1, 2, ...
+            int maxwindow = m_omegavalsp.size();
+            if(omega_i >= maxwindow){ //Exceeded the precomputed window
+                break;
+            }
+            res -= K*(m_memory[i+1] - m_memory[i])*m_omegavalsp[omega_i]; //The summation terms
+        }
         return res;
     }
 }

@@ -64,15 +64,15 @@ namespace control{
                 }
             }
         private:
+            double m_dtmin;
+            double m_dtmax;
             double m_errmax;
             double m_varmin;
             double m_varmax;
-            double m_dtmin;
-            double m_dtmax;
 
-            std::deque<double> m_errors; //Hold the latest three errors
             double m_dtholder; //0.0 if there is no dt to be suggested already
             double m_dtlast; //Will be initialized to m_dtmin
+            std::deque<double> m_errors; //Hold the latest three errors
             double m_kp = 0.075;
             double m_ki = 0.175;
             double m_kd = 0.01;

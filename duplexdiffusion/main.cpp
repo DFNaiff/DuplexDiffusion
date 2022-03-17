@@ -33,7 +33,56 @@ void fixed_timestep_solve(duplexsolver::PhysicalParams& physparams,
                           double tmax,
                           std::string savename) {
     duplexsolver::Solver solver(physparams, solparams, bcconditions);
+    std::ofstream file_bulk;
+    std::ofstream file_precip;
+    std::vector<double> xspace = solver.get_xspace();
+    file_bulk.open(savename + "_b");
+    file_precip.open(savename + "_p");
+    //Write space line
+    std::vector<std::ofstream*> files{&file_bulk, &file_precip};
+    for(std::ofstream* file : files){
+        *file << 0.0 << " "; //Dummy
+        for(int i = 0; i < solparams.nspace; i++){
+            double x = xspace[i];
+            if(i == solparams.nspace-1){
+                *file << x << std::endl;
+            } else {
+                *file << x << " ";
+            }
+        }
+    }
+    //Solve and write
+    double percentage = 0.0;
+    int precision = 1;
+    double precisionmultiplier = std::pow(10, precision);
+    while(solver.last_timestep() < tmax){
+        //solver.step();
+        auto bulk_val = solver.step();
+        auto precip_val = solver.get_precipitate_concentration();
+        file_bulk << solver.last_timestep() << " " << bulk_val.transpose() << std::endl;
+        file_precip << solver.last_timestep() << " " << precip_val.transpose() << std::endl;
+
+        double currper = std::floor(100*precisionmultiplier*solver.last_timestep()/tmax)/precisionmultiplier;
+        if(currper >= percentage){
+            percentage = currper;
+            std::cout << "Percentage of calculation done:" << percentage << "%\r";
+        }
+    }
+    file_bulk.close();
+    file_precip.close();
+}
+
+//Due to integration accuracy issues
+//support for variable timestep is limited for now, and API won't be updated
+void variable_timestep_solve(duplexsolver::PhysicalParams& physparams,
+                             duplexsolver::SolverParams& solparams,
+                             duplexsolver::BoundaryConditions& bcconditions,
+                             control::Controller& controller,
+                             double tmax,
+                             std::string savename) {
+    duplexsolver::Solver solver(physparams, solparams, bcconditions);
     std::ofstream file;
+    file.open(savename);
     std::vector<double> xspace = solver.get_xspace();
     file.open(savename);
     //Write space line
@@ -46,33 +95,6 @@ void fixed_timestep_solve(duplexsolver::PhysicalParams& physparams,
             file << x << " ";
         }
     }
-    //Solve and write
-    double percentage = 0.0;
-    int precision = 1;
-    double precisionmultiplier = std::pow(10, precision);
-    while(solver.last_timestep() < tmax){
-        //solver.step();
-        auto current_val = solver.step();
-        file << solver.last_timestep() << " " << current_val.transpose() << std::endl;
-
-        double currper = std::floor(100*precisionmultiplier*solver.last_timestep()/tmax)/precisionmultiplier;
-        if(currper >= percentage){
-            percentage = currper;
-            std::cout << "Percentage of calculation done:" << percentage << "%\r";
-        }
-    }
-    file.close();
-}
-
-void variable_timestep_solve(duplexsolver::PhysicalParams& physparams,
-                             duplexsolver::SolverParams& solparams,
-                             duplexsolver::BoundaryConditions& bcconditions,
-                             control::Controller& controller,
-                             double tmax,
-                             std::string savename) {
-    duplexsolver::Solver solver(physparams, solparams, bcconditions);
-    std::ofstream file;
-    file.open(savename);
     while(solver.last_timestep() < tmax){
         //solver.step();
         double dt = controller.suggest_step();
@@ -161,7 +183,7 @@ int main(int argc, char **argv)
     if(argc >= 3){
         savestring = argv[2];
     } else {
-        savestring = "../data/testcli/result_json_toy.txt"; //Default (for debug)
+        savestring = "../data/testcli/result_json_toy"; //Default (for debug)
     }
     if(argc >= 4){
         inputstring = argv[3];
@@ -180,6 +202,7 @@ int main(int argc, char **argv)
 
     double elapsed = timerobj.elapsed();
     std::string outstring = string_format("Done! The elapsed time was %f\n", elapsed) +
-                            "Result file can be found in " + savestring + "\n";
+                            "Result file can be found in " + savestring + "_b" + " (for bulk) \n" +
+                            "and in " + savestring + "_p" + "(for precipitate) \n";
     std::cout << outstring;
 }

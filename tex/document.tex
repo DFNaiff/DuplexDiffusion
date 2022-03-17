@@ -131,7 +131,7 @@ Consider then
 	\end{split}
 \end{equation}
 
-First: solving $n$ differential equation. Ommiting $x$, let $m(r,t) := n(r,t) - c(t)$. Hence,
+First: solving $n$ differential equation. Ommiting $x$, let $m(r,t) := n(r,t) - K c(t)$. Hence,
 \begin{equation}\label{precipitatemproblem}
 	\pderiv{m}{t}(r,t) = \alpha \mathcal{O}[m](r,t) + c'(t); \quad m(r,t) = m(-R,t) = 0,
 \end{equation}
@@ -141,7 +141,7 @@ with
 \end{equation}
 Using separation of variables, let $m(r,t) = T(t) \varphi(r)$. Hence, we have
 \begin{equation}
- T' \varphi = \alpha \mathcal{O}[\varphi] T + c'(t)
+ T' \varphi = \alpha \mathcal{O}[\varphi] T - K c'(t)
 \end{equation}
 We look then at the eigenvalue problem
 \begin{equation}
@@ -196,40 +196,32 @@ m(r,t) = \sum_{k=1}^\infty \psi_k(t) \varphi_k(r),
 \end{equation}
 we have that 
 \begin{equation}
-\sum_{k=1}^{\infty} \left(\psi_k'(t) + \lambda_k \alpha \psi_t - c'_k(t) \right) \varphi(k) = 0,
+\sum_{k=1}^{\infty} \left(\psi_k'(t) + \lambda_k \alpha \psi_t + K c'_k(t) \right) \varphi(k) = 0,
 \end{equation}
 Hence, we have
-\begin{equation}
-\psi_k(t) = e^{-\alpha \lambda_k t} \left(\psi_k(0) + \int_0^t e^{\alpha \lambda k \tau} K c'_k(\tau) d \tau \right),
+\begin{equation}\label{fullphikdefinition}
+\psi_k(t) = e^{-\alpha \lambda_k t} \left(\psi_k(0) - \int_0^t e^{\alpha \lambda k \tau} K c'_k(\tau) d \tau \right),
 \end{equation}
-or, assuming $\psi_k(0) = 0$ (because we will consider $n(0,t,x) = 0$ and $c(0,t) = 0$), 
+or, assuming $\psi_k(0) = 0$ (because we will consider $n(0,t,x) = 0$ and $c(x,0) = 0$, although this definition \textit{still works} for $n(r,t,x) = n(0,t,x) = K c(x,t)$, 
 \begin{equation}\label{phikdefinitions}
 \begin{split}
-\psi_k(t) & = K e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda k \tau} c'(\tau) \frac{1} R \int_{-R}^R (r/R)^2 \varphi_k(r) dr d \tau = \\
-& = -2 K \frac{(-1)^k}{\pi k} e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda_k \tau} c'(\tau) d \tau = \\
-& -2 K \frac{(-1)^k}{\pi k} \left(c(t) + e^{-\alpha \lambda_k t} c(0) - \frac{e^{-\alpha \lambda_k t}}{\lambda_k t} \int_0^t e^{\alpha \lambda_k t} c(\tau) d\tau \right).
+\psi_k(t) & = -K e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda k \tau} c'(\tau) \frac{1} R \int_{-R}^R (r/R)^2 \varphi_k(r) dr d \tau = \\
+& = 2 K \frac{(-1)^k}{\pi k} e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda_k \tau} c'(\tau) d \tau
 \end{split}
 \end{equation}
-And, we remember that $m(r,t) = n(0,t) + c(t)$. Finally, we can then find
+And, we remember that $m(r,t) = n(0,t) - K c(t)$. Finally, we can then find
 \begin{equation}
 J = \alpha \pderiv{n}{r} (t,R) = -\alpha \sum_{k=1}^\infty \psi_k(t) \pderiv{\varphi_k}{r}(R).
 \end{equation}.
 But, we have that $\pderiv{\varphi_k}{r}(R) = (-1)^k \pi k/R$. Hence, we can join everything and find that
 \begin{equation}
-J = \frac{2}{R} \alpha K \sum_{k=1}^\infty \left(c(t) + e^{-\alpha \lambda_k t} c(0) - \frac{e^{-\alpha \lambda_k t}}{\lambda_k t} \int_0^t e^{\alpha \lambda_k t} c(\tau) d\tau \right).
+J = \frac{2}{R} \alpha K \sum_{k=1}^\infty e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda_k \tau} c'(\tau) d \tau
 \end{equation}
 Therefore, our equation for $c$ becomes (showing again $x$):
-\begin{equation}\label{bulkproblemform1}
-\begin{split}
-\pderiv{c}{t}(x,t) = & D \frac{\partial^2 c}{\partial x^2}(x,t) - \\
-& 8 \pi R \Gamma \alpha K \sum_{k=1}^\infty \left(c(x,t) + e^{-\alpha \lambda_k t} c(x,0) - \frac{e^{-\alpha \lambda_k t}}{\lambda_k t} \int_0^t e^{\alpha \lambda_k t} c(x, \tau) d\tau \right),
-\end{split}
+\begin{equation}\label{bulkproblemform2a}
+\pderiv{c}{t}(x,t) = D \frac{\partial^2 c}{\partial x^2}(x,t) - 8 \pi R \Gamma \alpha K \sum_{k=1}^\infty e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda_k \tau} c'(x, \tau) d \tau
 \end{equation}
 or
-\begin{equation}\label{bulkproblemform2a}
-\pderiv{c}{t}(x,t) = D \frac{\partial^2 c}{\partial x^2}(x,t) - 8 \pi R \Gamma \alpha K \sum_{k=1}^\infty e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda_k \tau} c'(\tau) d \tau
-\end{equation}
-or still
 \begin{equation}\label{bulkproblemform2b}
 \begin{split}
 & \pderiv{c}{t}(x,t) = D \frac{\partial^2 c}{\partial x^2}(x,t) - 8 \pi R \Gamma \alpha K \sum_{k=1}^\infty (\omega_k *_t c')(x,t) \\
@@ -253,13 +245,41 @@ or, expanding the convolution,
 \begin{equation}\label{bulkproblemform3}
 	\pderiv{}{t} c(x, t) + \beta \int_0^t \omega(t - s) \pderiv{}{s} c(x, s) ds = D \frac{\partial^2 c}{\partial x^2}(x,t)
 \end{equation}
+From \eqref{phikdefinitions}, we can also compute $n(r, t, x)$ as
+\begin{equation}
+	\begin{split}
+	n(r,t,x) = & K c(t, x) + \sum_{k=1}^\infty \psi_k(t) \varphi_k(r) = \\
+	& K c(t, x) + 2 K \sum_{k=1}^\infty \frac{(-1)^k}{\pi k} e^{-\alpha \lambda_k t} \int_0^t e^{\alpha \lambda_k \tau} c'(\tau) d \tau \varphi_k(r) = \\
+	& K c(t,x) + 2 K \int_0^t \sum_{k=1}^\infty \frac{(-1)^k}{\pi k} e^{\alpha \lambda_k (\tau-t)} \varphi_k(r) c'(\tau) d \tau,
+	\end{split}
+\end{equation}
+or
+\begin{equation}
+n(r,t,x) = K \left(c(x, t) - \int_0^t \xi(r, t - s) \pderiv{}{s} c(x, s) ds\right)
+\end{equation},
+where
+\begin{equation}
+	\xi(r, t) := -2 \sum_{k=1}^\infty \frac{(-1)^k}{\pi k} e^{\alpha \lambda_k t} \varphi_k(r).
+\end{equation}
+If we are interested in a more "global" information (not depending on $r$), we then define the mean amount of hydrogen per precipitate $c_p = \frac{1}{V} \int_V n(r) dr$, we have
+\begin{equation}
+	\begin{split}
+	c_p(x, t) := K \left( c(x,t) - \int_0^t \omega_p(t-s) \pderiv{}{s} c(x, s) ds \right)
+	\end{split},
+\end{equation}
+with $\omega_p(t)$ being given by
+\begin{equation}
+	\frac{3}{2} \sum_{k=1}^k \frac{1}{\pi^2 k^2} \exp \left( -\frac{\alpha \pi^2 k^2 t}{R^2} \right)
+\end{equation}
 
 \subsection{Cylindric precipitates, \textit{mutatis mutandis}}
 If we consider the approximation by cylindric precipitates, then, defining $\Gamma_c$ as the amount precipitates per cross-sectional area, we can follow the same arguments above (now using Bessel functions of the first kind), and arrive at almost the same equations, now with
 \begin{equation}
 	\begin{split}
 		& \beta = 4 \pi \Gamma \alpha K \\
-		& \omega = \sum_{k=1}^\infty \omega_k = \sum_{k=1}^\infty \exp \left( -\frac{\alpha u_{0, k}^2 t}{R^2} \right)
+		& \omega = \sum_{k=1}^\infty \omega_k = \sum_{k=1}^\infty \exp \left( -\frac{\alpha u_{0, k}^2 t}{R^2} \right) \\
+		& c_p(x,t) = 4 \pi R^2 K \left( c(x,t) - \int_0^t \omega_p(t-s) \pderiv{}{s} c(x, s) ds \right) \\
+		& \omega_p(t) = \frac{1}{4} \sum_{k=1}^k \frac{1}{u_{0, k}^2} \exp \left( -\frac{\alpha \pi^2 u_{0, k}^2 t}{R^2} \right)
 	\end{split},
 \end{equation}
 with $u_{0, k}$ being the k-th zero of the zeroth Bessel function of the first kind.
@@ -344,7 +364,7 @@ There are the results of a simulation of this model, with unit concentration at 
 	\label{fig:profile4999}
 \end{figure}
 
-\appendix
+
 \section{Transform approaches}
 \subsection{Fourier transforming bulk equation}
 We can do other things. Let's try to Fourier transform this (in $t$). Let $C(x,s) = \mathcal{F}_t(c(x,t))(s)$. Hence, we have that
